@@ -116,7 +116,7 @@ pragma solidity 0.4.24;
 
 contract ReentrancyGuard {
 
-    // Locked state of mutex
+    // 锁定互斥状态
     bool private locked = false;
 
     /// @dev Functions with this modifer cannot be reentered. The mutex will be locked
@@ -854,29 +854,29 @@ contract IExchangeCore {
 contract MExchangeCore is
     IExchangeCore
 {
-    // Fill event is emitted whenever an order is filled.
+    // 每当一个订单被吃单，吃单时间会被发出.
     event Fill(
-        address indexed makerAddress,         // Address that created the order.      
-        address indexed feeRecipientAddress,  // Address that received fees.
-        address takerAddress,                 // Address that filled the order.
-        address senderAddress,                // Address that called the Exchange contract (msg.sender).
-        uint256 makerAssetFilledAmount,       // Amount of makerAsset sold by maker and bought by taker. 
-        uint256 takerAssetFilledAmount,       // Amount of takerAsset sold by taker and bought by maker.
-        uint256 makerFeePaid,                 // Amount of ZRX paid to feeRecipient by maker.
-        uint256 takerFeePaid,                 // Amount of ZRX paid to feeRecipient by taker.
-        bytes32 indexed orderHash,            // EIP712 hash of order (see LibOrder.getOrderHash).
-        bytes makerAssetData,                 // Encoded data specific to makerAsset. 
-        bytes takerAssetData                  // Encoded data specific to takerAsset.
+        address indexed makerAddress,         // 创建订单的地址.      
+        address indexed feeRecipientAddress,  // 接受交易费的地址.
+        address takerAddress,                 // 吃单的地址.
+        address senderAddress,                // 调用交易合约的发送方地址.
+        uint256 makerAssetFilledAmount,       // maker卖出，taker购买的 makerAsset数量. 
+        uint256 takerAssetFilledAmount,       // taker卖出，taker购买的 takerAsset数量.
+        uint256 makerFeePaid,                 // maker支付交易费的数量.
+        uint256 takerFeePaid,                 // taker支付交易费的数量.
+        bytes32 indexed orderHash,            // 使用EIP712标准来对订单实现的哈希 (详情请参考 LibOrder.getOrderHash).
+        bytes makerAssetData,                 // makerAsset的编码数据. 
+        bytes takerAssetData                  // takerAsset的编码数据.
     );
 
     // 无论一个独立的订单是否被取消，取消时间都会被发出.
     event Cancel(
         address indexed makerAddress,         // 创建订单的地址.      
-        address indexed feeRecipientAddress,  // Address that would have recieved fees if order was filled.   
-        address senderAddress,                // Address that called the Exchange contract (msg.sender).
-        bytes32 indexed orderHash,            // EIP712 hash of order (see LibOrder.getOrderHash).
-        bytes makerAssetData,                 // Encoded data specific to makerAsset. 
-        bytes takerAssetData                  // Encoded data specific to takerAsset.
+        address indexed feeRecipientAddress,  // 当订单被吃时会接受交易费的地址.   
+        address senderAddress,                // 调用交易合约的发送方地址.
+        bytes32 indexed orderHash,            // 使用EIP712标准来对订单实现的哈希 (详情请参考 LibOrder.getOrderHash).
+        bytes makerAssetData,                 // makerAsset的编码数据. 
+        bytes takerAssetData                  // takerAsset的编码数据.
     );
 
     // CancelUpTo event is emitted whenever `cancelOrdersUpTo` is executed succesfully.
@@ -904,11 +904,11 @@ contract MExchangeCore is
     function cancelOrderInternal(LibOrder.Order memory order)
         internal;
 
-    /// @dev Updates state with results of a fill order.
-    /// @param order that was filled.
-    /// @param takerAddress Address of taker who filled the order.
-    /// @param orderTakerAssetFilledAmount Amount of order already filled.
-    /// @return fillResults Amounts filled and fees paid by maker and taker.
+    /// @dev 根据吃单后的结果更新订单状态.
+    /// @param 吃过的订单.
+    /// @param 吃订单的taker地址.
+    /// @param 订单已经被taker吃过的数量.
+    /// @return 已经被吃单的数量和maker,taker支付的交易费
     function updateFilledState(
         LibOrder.Order memory order,
         address takerAddress,
@@ -970,10 +970,10 @@ contract MExchangeCore is
         internal
         view;
 
-    /// @dev Calculates amounts filled and fees paid by maker and taker.
-    /// @param order to be filled.
-    /// @param takerAssetFilledAmount Amount of takerAsset that will be filled.
-    /// @return fillResults Amounts filled and fees paid by maker and taker.
+    /// @dev 计算吃单结果和maker,taker支付手续费的数量.
+    /// @param order 要被吃的订单.
+    /// @param takerAssetFilledAmount 要被吃得takerAsset数量.
+    /// @return 吃单的数量和maker,taker支付的费用.
     function calculateFillResults(
         LibOrder.Order memory order,
         uint256 takerAssetFilledAmount
@@ -2435,11 +2435,11 @@ pragma solidity 0.4.24;
 
 contract IValidator {
 
-    /// @dev Verifies that a signature is valid.
-    /// @param hash Message hash that is signed.
-    /// @param signerAddress Address that should have signed the given hash.
-    /// @param signature Proof of signing.
-    /// @return Validity of order signature.
+    /// @dev 验证一个签名是有效的.
+    /// @param hash 用于签名的消息哈希.
+    /// @param signerAddress 签名者地址.
+    /// @param signature 签名证据.
+    /// @return 订单签名的有效性.
     function isValidSignature(
         bytes32 hash,
         address signerAddress,
@@ -2508,11 +2508,11 @@ contract MixinSignatureValidator is
         );
     }
 
-    /// @dev Verifies that a hash has been signed by the given signer.
-    /// @param hash Any 32 byte hash.
-    /// @param signerAddress Address that should have signed the given hash.
-    /// @param signature Proof that the hash has been signed by signer.
-    /// @return True if the address recovered from the provided signature matches the input signer address.
+    /// @dev 验证一个签名是有效的.
+    /// @param hash 用于签名的消息哈希.
+    /// @param signerAddress 对给定哈希进行签名的签名者地址.
+    /// @param signature 签名证据.
+    /// @return  如果从给定的签名信息恢复的地址和输入的签名者地址一致，返回True
     function isValidSignature(
         bytes32 hash,
         address signerAddress,
@@ -2527,10 +2527,10 @@ contract MixinSignatureValidator is
             "LENGTH_GREATER_THAN_0_REQUIRED"
         );
 
-        // Pop last byte off of signature byte array.
+        // Pop出签名字节数组中的最后一个字节.
         uint8 signatureTypeRaw = uint8(signature.popLastByte());
 
-        // Ensure signature is supported
+        // 确保签名信息是支持的
         require(
             signatureTypeRaw < uint8(SignatureType.NSignatureTypes),
             "SIGNATURE_UNSUPPORTED"
@@ -2538,7 +2538,7 @@ contract MixinSignatureValidator is
 
         SignatureType signatureType = SignatureType(signatureTypeRaw);
 
-        // Variables are not scoped in Solidity.
+        // 参数不再Solidity范围.
         uint8 v;
         bytes32 r;
         bytes32 s;
@@ -2582,7 +2582,7 @@ contract MixinSignatureValidator is
             isValid = signerAddress == recovered;
             return isValid;
 
-        // Signed using web3.eth_sign
+        // 使用 web3.eth_sign 进行签名
         } else if (signatureType == SignatureType.EthSign) {
             require(
                 signature.length == 65,
@@ -2603,8 +2603,8 @@ contract MixinSignatureValidator is
             isValid = signerAddress == recovered;
             return isValid;
 
-        // Signature verified by wallet contract.
-        // If used with an order, the maker of the order is the wallet contract.
+        // 签名被钱包合约验证.
+        // 如果在订单中用到，那么订单的maker就是合约钱包.
         } else if (signatureType == SignatureType.Wallet) {
             isValid = isValidWalletSignature(
                 hash,
