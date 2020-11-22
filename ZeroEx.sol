@@ -2544,7 +2544,7 @@ contract MixinSignatureValidator is
         bytes32 s;
         address recovered;
 
-        // Always illegal signature.
+        // 一直不合法的签名.
         // This is always an implicit option since a signer can create a
         // signature array with invalid type or length. We may as well make
         // it an explicit option. This aids testing and analysis. It is
@@ -2552,7 +2552,7 @@ contract MixinSignatureValidator is
         if (signatureType == SignatureType.Illegal) {
             revert("SIGNATURE_ILLEGAL");
 
-        // Always invalid signature.
+        // 一直无效的签名.
         // Like Illegal, this is always implicitly available and therefore
         // offered explicitly. It can be implicitly created by providing
         // a correctly formatted but incorrect signature.
@@ -2564,7 +2564,7 @@ contract MixinSignatureValidator is
             isValid = false;
             return isValid;
 
-        // Signature using EIP712
+        // 使用EIP712的签名
         } else if (signatureType == SignatureType.EIP712) {
             require(
                 signature.length == 65,
@@ -2613,18 +2613,18 @@ contract MixinSignatureValidator is
             );
             return isValid;
 
-        // Signature verified by validator contract.
-        // If used with an order, the maker of the order can still be an EOA.
-        // A signature using this type should be encoded as:
+        // 被验证者合约验证的签名信息.
+        // 如果被订单使用，订单的maker可以依然是EOA账号.
+        // 使用这个类型的签名应该被编码为:
         // | Offset   | Length | Contents                        |
         // | 0x00     | x      | Signature to validate           |
         // | 0x00 + x | 20     | Address of validator contract   |
         // | 0x14 + x | 1      | Signature type is always "\x06" |
         } else if (signatureType == SignatureType.Validator) {
-            // Pop last 20 bytes off of signature byte array.
+            // Pop签名字节数组的最后20个字节.
             address validatorAddress = signature.popLast20Bytes();
 
-            // Ensure signer has approved validator.
+            // 确保签名者授权过验证者合约.
             if (!allowedValidators[signerAddress][validatorAddress]) {
                 return false;
             }
@@ -2636,26 +2636,22 @@ contract MixinSignatureValidator is
             );
             return isValid;
 
-        // Signer signed hash previously using the preSign function.
+        // 签名者预先使用预签名方法签名哈希.
         } else if (signatureType == SignatureType.PreSigned) {
             isValid = preSigned[hash][signerAddress];
             return isValid;
         }
 
-        // Anything else is illegal (We do not return false because
-        // the signature may actually be valid, just not in a format
-        // that we currently support. In this case returning false
-        // may lead the caller to incorrectly believe that the
-        // signature was invalid.)
+        // 任何剩余的情况都是不合法的 （我们不返回false,因为这个签名可能实际上是有效的，但仅是一个我们当前不支持的格式
+        // 在这种情况返回false会导致被调用者错误地相信这个签名是无效的。）
         revert("SIGNATURE_UNSUPPORTED");
     }
 
-    /// @dev Verifies signature using logic defined by Wallet contract.
-    /// @param hash Any 32 byte hash.
-    /// @param walletAddress Address that should have signed the given hash
-    ///                      and defines its own signature verification method.
-    /// @param signature Proof that the hash has been signed by signer.
-    /// @return True if signature is valid for given wallet..
+    /// @dev 使用钱包合约定义的逻辑验证签名.
+    /// @param hash 任何32位字节的哈希.
+    /// @param walletAddress 定义过自己的签名验证方法的合约地址
+    /// @param signature 哈希被签名者签名的签名证据.
+    /// @return 如果签名对给定的钱包来说是有效的返回true
     function isValidWalletSignature(
         bytes32 hash,
         address walletAddress,
@@ -2720,12 +2716,12 @@ contract MixinSignatureValidator is
         return isValid;
     }
 
-    /// @dev Verifies signature using logic defined by Validator contract.
-    /// @param validatorAddress Address of validator contract.
-    /// @param hash Any 32 byte hash.
-    /// @param signerAddress Address that should have signed the given hash.
-    /// @param signature Proof that the hash has been signed by signer.
-    /// @return True if the address recovered from the provided signature matches the input signer address.
+    /// @dev 使用验证者合约定义的逻辑验证签名.
+    /// @param validatorAddress 验证者合约的地址.
+    /// @param hash 任何32位字节的哈希.
+    /// @param signerAddress 签名过指定哈希的地址.
+    /// @param signature 哈希被签名者签名的签名证据..
+    /// @return 如果根据signature恢复的地址和输入signerAddress参数匹配则返回True.
     function isValidValidatorSignature(
         address validatorAddress,
         bytes32 hash,
@@ -4046,11 +4042,11 @@ contract MixinTransactions is
     MSignatureValidator,
     MTransactions
 {
-    // Mapping of transaction hash => executed
-    // This prevents transactions from being executed more than once.
+    // 哈希是否执行的映射
+    // 预防交易被执行超过一次.
     mapping (bytes32 => bool) public transactions;
 
-    // Address of current transaction signer
+    // 当前交易签名者地址
     address public currentContextAddress;
 
     /// @dev Executes an exchange method call in the context of signer.
@@ -4066,7 +4062,7 @@ contract MixinTransactions is
     )
         external
     {
-        // Prevent reentrancy
+        // 预防重入
         require(
             currentContextAddress == address(0),
             "REENTRANCY_ILLEGAL"
@@ -4078,13 +4074,13 @@ contract MixinTransactions is
             data
         ));
 
-        // Validate transaction has not been executed
+        // 验证交易未被执行
         require(
             !transactions[transactionHash],
             "INVALID_TX_HASH"
         );
 
-        // Transaction always valid if signer is sender of transaction
+        // 如果签名者是交易的发送方，那么交易一直有效
         if (signerAddress != msg.sender) {
             // Validate signature
             require(
@@ -4096,28 +4092,28 @@ contract MixinTransactions is
                 "INVALID_TX_SIGNATURE"
             );
 
-            // Set the current transaction signer
+            // 设置当前交易的签名者
             currentContextAddress = signerAddress;
         }
 
-        // Execute transaction
+        // 执行交易
         transactions[transactionHash] = true;
         require(
             address(this).delegatecall(data),
             "FAILED_EXECUTION"
         );
 
-        // Reset current transaction signer if it was previously updated
+        // 如果当前交易签名者被预先更新过，那么重置它
         if (signerAddress != msg.sender) {
             currentContextAddress = address(0);
         }
     }
 
-    /// @dev Calculates EIP712 hash of the Transaction.
-    /// @param salt Arbitrary number to ensure uniqueness of transaction hash.
-    /// @param signerAddress Address of transaction signer.
-    /// @param data AbiV2 encoded calldata.
-    /// @return EIP712 hash of the Transaction.
+    /// @dev 计算交易的EIP712标准哈希.
+    /// @param salt 保证交易哈希是独一无二的任意数字.
+    /// @param signerAddress 交易签名者地址.
+    /// @param data AbiV2编码数据.
+    /// @return 交易的EIP712标准哈希.
     function hashZeroExTransaction(
         uint256 salt,
         address signerAddress,
@@ -4130,7 +4126,7 @@ contract MixinTransactions is
         bytes32 schemaHash = EIP712_ZEROEX_TRANSACTION_SCHEMA_HASH;
         bytes32 dataHash = keccak256(data);
 
-        // Assembly for more efficiently computing:
+        // 用汇编会更高效的计算:
         // keccak256(abi.encodePacked(
         //     EIP712_ZEROEX_TRANSACTION_SCHEMA_HASH,
         //     salt,
