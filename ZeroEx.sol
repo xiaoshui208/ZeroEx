@@ -119,22 +119,21 @@ contract ReentrancyGuard {
     // 锁定互斥状态
     bool private locked = false;
 
-    /// @dev Functions with this modifer cannot be reentered. The mutex will be locked
-    ///      before function execution and unlocked after.
+    /// @dev 使用了这个修饰器的方法能不被重入。方法执行前互斥被锁定，之后互斥被解锁。
     modifier nonReentrant() {
-        // Ensure mutex is unlocked
+        // 保证互斥是解除的
         require(
             !locked,
             "REENTRANCY_ILLEGAL"
         );
 
-        // Lock mutex before function call
+        // 方法调用之前锁定互斥
         locked = true;
 
         // Perform function call
         _;
 
-        // Unlock mutex after function call
+        // 方法调用之后解锁互斥
         locked = false;
     }
 }
@@ -2459,16 +2458,16 @@ contract MixinSignatureValidator is
 {
     using LibBytes for bytes;
 
-    // Mapping of hash => signer => signed
+    // 哈希的签名者是否正确的映射
     mapping (bytes32 => mapping (address => bool)) public preSigned;
 
-    // Mapping of signer => validator => approved
+    // 签名者是否对验证器合约批准的映射
     mapping (address => mapping (address => bool)) public allowedValidators;
 
-    /// @dev Approves a hash on-chain using any valid signature type.
-    ///      After presigning a hash, the preSign signature type will become valid for that hash and signer.
-    /// @param signerAddress Address that should have signed the given hash.
-    /// @param signature Proof that the hash has been signed by signer.
+    /// @dev 使用任何有效的签名类型批准一个链上的哈希.
+    ///      预签名一个哈希后，预签名消息类型将为哈希和签名者变得有效.
+    /// @param signerAddress 签名了给定哈希的签名者地址.
+    /// @param signature 哈希已经被签名者签名的签名证明.
     function preSign(
         bytes32 hash,
         address signerAddress,
@@ -2489,9 +2488,9 @@ contract MixinSignatureValidator is
         preSigned[hash][signerAddress] = true;
     }
 
-    /// @dev Approves/unnapproves a Validator contract to verify signatures on signer's behalf.
-    /// @param validatorAddress Address of Validator contract.
-    /// @param approval Approval or disapproval of  Validator contract.
+    /// @dev 批准或者取消批准一个验证合约在签名者的行为上去验证签名.
+    /// @param validatorAddress 验证器合约的地址.
+    /// @param approval 批准或取消批准验证器合约.
     function setSignatureValidatorApproval(
         address validatorAddress,
         bool approval
@@ -2545,17 +2544,13 @@ contract MixinSignatureValidator is
         address recovered;
 
         // 一直不合法的签名.
-        // This is always an implicit option since a signer can create a
-        // signature array with invalid type or length. We may as well make
-        // it an explicit option. This aids testing and analysis. It is
-        // also the initialization value for the enum type.
+        // 当签名者能用无效的类型和长度创建一个签名数组，这个一直是一个隐式选项。
+        // 我们也可以把它做成一个显式选项.这个辅助测试和分析，他也是枚举类型的初始化值
         if (signatureType == SignatureType.Illegal) {
             revert("SIGNATURE_ILLEGAL");
 
         // 一直无效的签名.
-        // Like Illegal, this is always implicitly available and therefore
-        // offered explicitly. It can be implicitly created by providing
-        // a correctly formatted but incorrect signature.
+        // 像不合法，这一只是一个隐式可用的，因此提供显式。这也可以通过提供一个正确的格式但错误签名被隐式创建 
         } else if (signatureType == SignatureType.Invalid) {
             require(
                 signature.length == 0,
@@ -4049,11 +4044,11 @@ contract MixinTransactions is
     // 当前交易签名者地址
     address public currentContextAddress;
 
-    /// @dev Executes an exchange method call in the context of signer.
-    /// @param salt Arbitrary number to ensure uniqueness of transaction hash.
-    /// @param signerAddress Address of transaction signer.
-    /// @param data AbiV2 encoded calldata.
-    /// @param signature Proof of signer transaction by signer.
+    /// @dev 在签名者的上下文中执行一个交易所方法调用.
+    /// @param salt 保证签名哈希是独一无二的任意数字.
+    /// @param signerAddress 交易签名者的地址.
+    /// @param data AbiV2编码数据.
+    /// @param signature 签名者签名交易的签名证据.
     function executeTransaction(
         uint256 salt,
         address signerAddress,
